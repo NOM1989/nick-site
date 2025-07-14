@@ -17,6 +17,9 @@ export default function RetroDisplay() {
   const [lastSentTime, setLastSentTime] = useState("")
   const [isActive, setIsActive] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [showMessageSent, setShowMessageSent] = useState(false)
+  const [messageFlashCount, setMessageFlashCount] = useState(0)
   const displayRef = useRef<HTMLDivElement>(null)
 
   // Update timestamp
@@ -36,6 +39,36 @@ export default function RetroDisplay() {
 
   const handleSend = useCallback(() => {
     if (row1.trim() || row2.trim()) {
+      setIsAnimating(true)
+      setIsActive(false) // Unfocus during animation
+      
+      // Start text disappearing animation
+      setTimeout(() => {
+        // Clear the text after disappearing effect
+        setRow1("")
+        setRow2("")
+        setCursorPos(0)
+        setCurrentRow(0)
+        
+        // Start "Message Sent" flash sequence
+        setShowMessageSent(true)
+        setMessageFlashCount(0)
+        
+        const flashInterval = setInterval(() => {
+          setMessageFlashCount(prev => {
+            const newCount = prev + 1
+            if (newCount >= 6) { // Flash 3 times (on/off = 2 counts per flash)
+              clearInterval(flashInterval)
+              setShowMessageSent(false)
+              setIsAnimating(false)
+              return 0
+            }
+            return newCount
+          })
+        }, 300) // Flash every 300ms
+        
+      }, 800) // Wait for text to disappear
+
       setSendStatus("SENT")
 
       // Update last sent time with full date and time
@@ -112,6 +145,11 @@ export default function RetroDisplay() {
             setCursorPos(row2.length)
           }
           break
+        case "Escape":
+          e.preventDefault()
+          setIsActive(false)
+          displayRef.current?.blur()
+          break
         default:
           if (e.key.length === 1) {
             // Check if the character is ASCII (character code 32-126 for printable ASCII)
@@ -154,8 +192,10 @@ export default function RetroDisplay() {
 
   // Handle click to focus
   const handleClick = () => {
-    setIsActive(true)
-    displayRef.current?.focus()
+    if (!isAnimating) {
+      setIsActive(true)
+      displayRef.current?.focus()
+    }
   }
 
   // Handle blur
@@ -165,40 +205,48 @@ export default function RetroDisplay() {
 
   // Handle row click for line selection
   const handleRowClick = (rowIndex: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setCurrentRow(rowIndex)
-    const text = rowIndex === 0 ? row1 : row2
-    setCursorPos(text.length) // Move cursor to end of clicked line
-    setIsActive(true)
+    if (!isAnimating) {
+      e.stopPropagation()
+      setCurrentRow(rowIndex)
+      const text = rowIndex === 0 ? row1 : row2
+      setCursorPos(text.length) // Move cursor to end of clicked line
+      setIsActive(true)
+    }
   }
 
   // Handle character click for precise cursor positioning
   const handleCharClick = (rowIndex: number, charIndex: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setCurrentRow(rowIndex)
+    if (!isAnimating) {
+      e.stopPropagation()
+      setCurrentRow(rowIndex)
 
-    // Limit cursor position to the actual text length, not the padded length
-    const text = rowIndex === 0 ? row1 : row2
-    const clampedPosition = Math.min(charIndex, text.length)
-    setCursorPos(clampedPosition)
-    setIsActive(true)
-    displayRef.current?.focus()
+      // Limit cursor position to the actual text length, not the padded length
+      const text = rowIndex === 0 ? row1 : row2
+      const clampedPosition = Math.min(charIndex, text.length)
+      setCursorPos(clampedPosition)
+      setIsActive(true)
+      displayRef.current?.focus()
+    }
   }
 
   // Render a single row with cursor and click handler
   const renderRow = (text: string, rowIndex: number) => {
     const paddedText = text.padEnd(16, " ")
-    const showCursor = isActive && currentRow === rowIndex
+    const showCursor = isActive && currentRow === rowIndex && !isAnimating
 
     return (
       <div
-        className="flex font-mono leading-none transition-colors duration-200 rounded-sm px-1"
+        className={`flex font-mono leading-none transition-all duration-200 rounded-sm px-1 ${
+          isAnimating ? 'animate-pulse opacity-50' : ''
+        }`}
         style={{
           fontSize: "18px",
           fontFamily: '"Courier New", monospace',
           fontWeight: "bold",
           textShadow: "1px 1px 0px rgba(0, 255, 0, 0.8), -1px -1px 0px rgba(0, 100, 0, 0.3)",
           letterSpacing: "1px",
+          transform: isAnimating ? 'scale(0.95)' : 'scale(1)',
+          transition: 'all 0.8s ease-out',
         }}
       >
         {Array.from({ length: 16 }, (_, i) => {
@@ -212,9 +260,10 @@ export default function RetroDisplay() {
                 inline-block text-center relative cursor-pointer
                 ${isCursor ? "bg-green-400 text-black animate-pulse" : "text-green-400"}
                 ${char === " " && !isCursor ? "bg-transparent" : ""}
-                ${!isCursor ? "hover:bg-green-900/30" : ""} transition-colors duration-150
+                ${!isCursor && !isAnimating ? "hover:bg-green-900/30" : ""} transition-all duration-150
+                ${isAnimating ? 'opacity-0' : 'opacity-100'}
               `}
-              onClick={(e) => handleCharClick(rowIndex, i, e)}
+              onClick={(e) => !isAnimating && handleCharClick(rowIndex, i, e)}
               style={{
                 width: "20px",
                 height: "24px",
@@ -222,6 +271,7 @@ export default function RetroDisplay() {
                 imageRendering: "pixelated",
                 fontSmooth: "never",
                 WebkitFontSmoothing: "none",
+                transition: 'opacity 0.8s ease-out',
               }}
             >
               {char === " " && isCursor ? "⠀" : char}
@@ -257,7 +307,7 @@ export default function RetroDisplay() {
                 </button>
               </HoverCardTrigger>
               <HoverCardContent className="w-72 flex flex-col space-y-2">
-                <h4 className="font-bold text-center">LCD Screen</h4>
+                <h4 className="font-bold text-center">Live LCD Screen</h4>
                 <Skeleton className="h-32 w-64" />
                 <p>This is linked to a display on my desk, send me a message!</p>
               </HoverCardContent>
@@ -290,7 +340,7 @@ export default function RetroDisplay() {
             {/* Display content */}
             <div className="relative z-10 space-y-1">
               {/* Show placeholder text if both rows are empty */}
-              {!row1 && !row2 && !isActive && (
+              {!row1 && !row2 && !isActive && !isAnimating && (
                 <div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   style={{
@@ -303,6 +353,26 @@ export default function RetroDisplay() {
                   Click to message...
                 </div>
               )}
+              
+              {/* Message Sent flash overlay */}
+              {showMessageSent && (
+                <div
+                  className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${
+                    messageFlashCount % 2 === 0 ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  style={{
+                    fontSize: "16px",
+                    fontFamily: '"Courier New", monospace',
+                    fontWeight: "bold",
+                    color: "rgba(0, 255, 0, 1)",
+                    textShadow: "0 0 8px rgba(0, 255, 0, 0.8), 0 0 16px rgba(0, 255, 0, 0.6)",
+                    transition: 'opacity 0.1s ease-in-out',
+                  }}
+                >
+                  MESSAGE SENT
+                </div>
+              )}
+              
               {renderRow(row1, 0)}
               {renderRow(row2, 1)}
             </div>
