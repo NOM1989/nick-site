@@ -20,7 +20,11 @@ export default function RetroDisplay() {
   const [isAnimating, setIsAnimating] = useState(false)
   const [showMessageSent, setShowMessageSent] = useState(false)
   const [messageFlashCount, setMessageFlashCount] = useState(0)
+  const [encryptedRow1, setEncryptedRow1] = useState("")
+  const [encryptedRow2, setEncryptedRow2] = useState("")
+  const [encryptionProgress, setEncryptionProgress] = useState(0)
   const displayRef = useRef<HTMLDivElement>(null)
+  const flashSequenceStarted = useRef(false)
 
   // Update timestamp
   const updateTimestamp = useCallback(() => {
@@ -37,37 +41,83 @@ export default function RetroDisplay() {
 
   const [sendStatus, setSendStatus] = useState("")
 
+  // Generate random character for encryption effect
+  const getRandomChar = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+    return chars[Math.floor(Math.random() * chars.length)]
+  }
+
+  // Create encrypted version of text with progressive encryption from left to right
+  const createEncryptedText = (originalText: string, progress: number) => {
+    return originalText.split('').map((char, index) => {
+      if (char === ' ') return ' '
+      
+      const charProgress = Math.max(0, Math.min(1, (progress - index * 0.1) * 2))
+      
+      if (charProgress >= 1) {
+        return ' ' // Fully encrypted (cleared)
+      } else if (charProgress > 0) {
+        return getRandomChar() // Currently encrypting
+      } else {
+        return char // Not yet encrypted
+      }
+    }).join('')
+  }
+
   const handleSend = useCallback(() => {
     if (row1.trim() || row2.trim()) {
       setIsAnimating(true)
       setIsActive(false) // Unfocus during animation
+      setEncryptionProgress(0)
+      flashSequenceStarted.current = false // Reset flash sequence flag
       
-      // Start text disappearing animation
-      setTimeout(() => {
-        // Clear the text after disappearing effect
-        setRow1("")
-        setRow2("")
-        setCursorPos(0)
-        setCurrentRow(0)
-        
-        // Start "Message Sent" flash sequence
-        setShowMessageSent(true)
-        setMessageFlashCount(0)
-        
-        const flashInterval = setInterval(() => {
-          setMessageFlashCount(prev => {
-            const newCount = prev + 1
-            if (newCount >= 6) { // Flash 3 times (on/off = 2 counts per flash)
-              clearInterval(flashInterval)
-              setShowMessageSent(false)
-              setIsAnimating(false)
-              return 0
+      // Start encryption animation
+      const encryptionInterval = setInterval(() => {
+        setEncryptionProgress(prev => {
+          const newProgress = prev + 0.1
+          
+          // Update encrypted versions
+          setEncryptedRow1(createEncryptedText(row1, newProgress))
+          setEncryptedRow2(createEncryptedText(row2, newProgress))
+          
+          if (newProgress >= 2) { // Complete encryption
+            clearInterval(encryptionInterval)
+            
+            // Clear original text after encryption completes (only once)
+            if (!flashSequenceStarted.current) {
+              flashSequenceStarted.current = true
+              setTimeout(() => {
+                setRow1("")
+                setRow2("")
+                setEncryptedRow1("")
+                setEncryptedRow2("")
+                setCursorPos(0)
+                setCurrentRow(0)
+                setEncryptionProgress(0)
+                setIsAnimating(false) // End animation state before flash
+                
+                // Start "Message Sent" flash sequence
+                setShowMessageSent(true)
+                setMessageFlashCount(0)
+                
+                const flashInterval = setInterval(() => {
+                  setMessageFlashCount(prev => {
+                    const newCount = prev + 1
+                    if (newCount >= 6) { // Flash 3 times (on/off = 2 counts per flash)
+                      clearInterval(flashInterval)
+                      setShowMessageSent(false)
+                      return 0
+                    }
+                    return newCount
+                  })
+                }, 300)
+              }, 200)
             }
-            return newCount
-          })
-        }, 300) // Flash every 300ms
-        
-      }, 800) // Wait for text to disappear
+          }
+          
+          return newProgress
+        })
+      }, 80) // Update every 80ms for smooth encryption effect
 
       setSendStatus("SENT")
 
@@ -231,27 +281,32 @@ export default function RetroDisplay() {
 
   // Render a single row with cursor and click handler
   const renderRow = (text: string, rowIndex: number) => {
-    const paddedText = text.padEnd(16, " ")
+    // Show encrypted version during animation
+    const displayText = isAnimating 
+      ? (rowIndex === 0 ? encryptedRow1 : encryptedRow2)
+      : text
+    
+    const paddedText = displayText.padEnd(16, " ")
     const showCursor = isActive && currentRow === rowIndex && !isAnimating
 
     return (
       <div
-        className={`flex font-mono leading-none transition-all duration-200 rounded-sm px-1 ${
-          isAnimating ? 'animate-pulse opacity-50' : ''
-        }`}
+        className={`flex font-mono leading-none transition-all duration-200 rounded-sm px-1`}
         style={{
           fontSize: "18px",
           fontFamily: '"Courier New", monospace',
           fontWeight: "bold",
           textShadow: "1px 1px 0px rgba(0, 255, 0, 0.8), -1px -1px 0px rgba(0, 100, 0, 0.3)",
           letterSpacing: "1px",
-          transform: isAnimating ? 'scale(0.95)' : 'scale(1)',
-          transition: 'all 0.8s ease-out',
         }}
       >
         {Array.from({ length: 16 }, (_, i) => {
           const char = paddedText[i]
           const isCursor = showCursor && i === cursorPos
+          
+          // Add glitch effect to characters being encrypted
+          const originalChar = (rowIndex === 0 ? row1 : row2)[i] || ' '
+          const isBeingEncrypted = isAnimating && char !== originalChar && char !== ' ' && originalChar !== ' '
 
           return (
             <span
@@ -260,8 +315,9 @@ export default function RetroDisplay() {
                 inline-block text-center relative cursor-pointer
                 ${isCursor ? "bg-green-400 text-black animate-pulse" : "text-green-400"}
                 ${char === " " && !isCursor ? "bg-transparent" : ""}
-                ${!isCursor && !isAnimating ? "hover:bg-green-900/30" : ""} transition-all duration-150
-                ${isAnimating ? 'opacity-0' : 'opacity-100'}
+                ${!isCursor && !isAnimating ? "hover:bg-green-900/30" : ""} 
+                ${isBeingEncrypted ? "animate-pulse text-green-300" : ""}
+                transition-all duration-75
               `}
               onClick={(e) => !isAnimating && handleCharClick(rowIndex, i, e)}
               style={{
@@ -271,7 +327,9 @@ export default function RetroDisplay() {
                 imageRendering: "pixelated",
                 fontSmooth: "never",
                 WebkitFontSmoothing: "none",
-                transition: 'opacity 0.8s ease-out',
+                textShadow: isBeingEncrypted 
+                  ? "0 0 8px rgba(0, 255, 0, 0.8), 0 0 4px rgba(0, 255, 0, 0.6)" 
+                  : "1px 1px 0px rgba(0, 255, 0, 0.8), -1px -1px 0px rgba(0, 100, 0, 0.3)",
               }}
             >
               {char === " " && isCursor ? "⠀" : char}
@@ -340,7 +398,7 @@ export default function RetroDisplay() {
             {/* Display content */}
             <div className="relative z-10 space-y-1">
               {/* Show placeholder text if both rows are empty */}
-              {!row1 && !row2 && !isActive && !isAnimating && (
+              {!row1 && !row2 && !isActive && !isAnimating && !showMessageSent && (
                 <div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   style={{
@@ -357,16 +415,14 @@ export default function RetroDisplay() {
               {/* Message Sent flash overlay */}
               {showMessageSent && (
                 <div
-                  className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${
-                    messageFlashCount % 2 === 0 ? 'opacity-100' : 'opacity-0'
-                  }`}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
                   style={{
                     fontSize: "16px",
                     fontFamily: '"Courier New", monospace',
                     fontWeight: "bold",
                     color: "rgba(0, 255, 0, 1)",
                     textShadow: "0 0 8px rgba(0, 255, 0, 0.8), 0 0 16px rgba(0, 255, 0, 0.6)",
-                    transition: 'opacity 0.1s ease-in-out',
+                    opacity: messageFlashCount % 2 === 0 ? 1 : 0,
                   }}
                 >
                   MESSAGE SENT
@@ -393,7 +449,7 @@ export default function RetroDisplay() {
                 {isOnline ? "●" : "○"} {isOnline ? "ONLINE" : "OFFLINE"}
               </span>
               <span className="text-gray-400">
-                Total messages: {totalMessages}
+                Total msgs: {totalMessages}
               </span>
             </div>
           </div>
