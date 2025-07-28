@@ -51,9 +51,9 @@ export default function RetroDisplay() {
   const createEncryptedText = (originalText: string, progress: number) => {
     return originalText.split('').map((char, index) => {
       if (char === ' ') return ' '
-      
+
       const charProgress = Math.max(0, Math.min(1, (progress - index * 0.1) * 2))
-      
+
       if (charProgress >= 1) {
         return ' ' // Fully encrypted (cleared)
       } else if (charProgress > 0) {
@@ -70,19 +70,19 @@ export default function RetroDisplay() {
       setIsActive(false) // Unfocus during animation
       setEncryptionProgress(0)
       flashSequenceStarted.current = false // Reset flash sequence flag
-      
+
       // Start encryption animation
       const encryptionInterval = setInterval(() => {
         setEncryptionProgress(prev => {
           const newProgress = prev + 0.1
-          
+
           // Update encrypted versions
           setEncryptedRow1(createEncryptedText(row1, newProgress))
           setEncryptedRow2(createEncryptedText(row2, newProgress))
-          
+
           if (newProgress >= 2) { // Complete encryption
             clearInterval(encryptionInterval)
-            
+
             // Clear original text after encryption completes (only once)
             if (!flashSequenceStarted.current) {
               flashSequenceStarted.current = true
@@ -95,11 +95,11 @@ export default function RetroDisplay() {
                 setCurrentRow(0)
                 setEncryptionProgress(0)
                 setIsAnimating(false) // End animation state before flash
-                
+
                 // Start "Message Sent" flash sequence
                 setShowMessageSent(true)
                 setMessageFlashCount(0)
-                
+
                 const flashInterval = setInterval(() => {
                   setMessageFlashCount(prev => {
                     const newCount = prev + 1
@@ -114,7 +114,7 @@ export default function RetroDisplay() {
               }, 200)
             }
           }
-          
+
           return newProgress
         })
       }, 80) // Update every 80ms for smooth encryption effect
@@ -282,10 +282,10 @@ export default function RetroDisplay() {
   // Render a single row with cursor and click handler
   const renderRow = (text: string, rowIndex: number) => {
     // Show encrypted version during animation
-    const displayText = isAnimating 
+    const displayText = isAnimating
       ? (rowIndex === 0 ? encryptedRow1 : encryptedRow2)
       : text
-    
+
     const paddedText = displayText.padEnd(16, " ")
     const showCursor = isActive && currentRow === rowIndex && !isAnimating
 
@@ -303,7 +303,7 @@ export default function RetroDisplay() {
         {Array.from({ length: 16 }, (_, i) => {
           const char = paddedText[i]
           const isCursor = showCursor && i === cursorPos
-          
+
           // Add glitch effect to characters being encrypted
           const originalChar = (rowIndex === 0 ? row1 : row2)[i] || ' '
           const isBeingEncrypted = isAnimating && char !== originalChar && char !== ' ' && originalChar !== ' '
@@ -327,8 +327,8 @@ export default function RetroDisplay() {
                 imageRendering: "pixelated",
                 fontSmooth: "never",
                 WebkitFontSmoothing: "none",
-                textShadow: isBeingEncrypted 
-                  ? "0 0 8px rgba(0, 255, 0, 0.8), 0 0 4px rgba(0, 255, 0, 0.6)" 
+                textShadow: isBeingEncrypted
+                  ? "0 0 8px rgba(0, 255, 0, 0.8), 0 0 4px rgba(0, 255, 0, 0.6)"
                   : "1px 1px 0px rgba(0, 255, 0, 0.8), -1px -1px 0px rgba(0, 100, 0, 0.3)",
               }}
             >
@@ -348,29 +348,33 @@ export default function RetroDisplay() {
         <div className="bg-gray-900 p-4 rounded-lg shadow-2xl">
           {/* Simple header */}
           <div className="flex justify-between items-center mb-3">
-            <h3 
-              className="font-mono text-green-400 text-sm font-bold tracking-wider"
-              style={{
-                textShadow: "0 0 4px rgba(0, 255, 0, 0.6)",
-                fontSize: "12px",
-                letterSpacing: "2px",
-              }}
-            >
-              LIVE DISPLAY
-            </h3>
-            <HoverCard openDelay={0}>
-              <HoverCardTrigger asChild>
-                <button className="p-1 text-green-400/70 hover:text-green-400 transition-colors">
-                  <Info className="w-3 h-3" />
-                </button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-72 flex flex-col space-y-2">
-                <h4 className="font-bold text-center">Live LCD Screen</h4>
-                <Skeleton className="h-32 w-64" />
-                <p>This is linked to a display on my desk, send me a message!</p>
-              </HoverCardContent>
-            </HoverCard>
+            <div className="flex">
+              <h3
+                className="font-mono text-green-400 text-sm font-bold tracking-wider"
+                style={{
+                  textShadow: "0 0 4px rgba(0, 255, 0, 0.6)",
+                  fontSize: "12px",
+                  letterSpacing: "2px",
+                }}
+              >
+                LIVE DISPLAY
+              </h3>
+              <HoverCard openDelay={0}>
+                <HoverCardTrigger asChild>
+                  <button className="p-1 text-green-400/70 hover:text-green-400 transition-colors">
+                    <Info className="w-3 h-3" />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-72 flex flex-col space-y-2">
+                  <h4 className="font-bold text-center">Live LCD Screen</h4>
+                  <Skeleton className="h-32 w-64" />
+                  <p>This is linked to a display on my desk, send me a message!</p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+            <p className="text-xs font-mono text-muted">000000{totalMessages}</p>
           </div>
+
           {/* Display area */}
           <div
             ref={displayRef}
@@ -411,7 +415,7 @@ export default function RetroDisplay() {
                   Click to message...
                 </div>
               )}
-              
+
               {/* Message Sent flash overlay */}
               {showMessageSent && (
                 <div
@@ -428,7 +432,7 @@ export default function RetroDisplay() {
                   MESSAGE SENT
                 </div>
               )}
-              
+
               {renderRow(row1, 0)}
               {renderRow(row2, 1)}
             </div>
@@ -442,18 +446,8 @@ export default function RetroDisplay() {
             />
           </div>
 
-          {/* Status bar */}
-          <div className="mt-3 px-2 py-1 bg-gray-800/30 rounded">
-            <div className="flex justify-between items-center text-xs font-mono">
-              <span className={isOnline ? "text-green-500" : "text-orange-500"}>
-                {isOnline ? "●" : "○"} {isOnline ? "ONLINE" : "OFFLINE"}
-              </span>
-              <span className="text-gray-400">
-                Total msgs: {totalMessages}
-              </span>
-            </div>
-          </div>
         </div>
+
 
         {/* Send button */}
         <div className="mt-4 flex justify-center">
