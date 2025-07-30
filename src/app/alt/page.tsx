@@ -25,7 +25,7 @@ export default function AltPage() {
         <div className="crt-content-transform">
           <div className="grid grid-cols-8 grid-rows-3 gap-6 h-full min-h-[90vh] max-w-[2000px] text-white font-inconsolata text-[1.3rem] leading-[1.4]">
 
-            <div className="col-span-5 row-span-1 p-6">
+            <div className="col-span-6 row-span-1 p-6">
               <div className="space-y-2">
                 <pre className="text-4xl font-bold mb-4">{"Welcome, I'm Nick Michau"}</pre>
                 <div className="text-2xl">{"Masters of Software Engineering"}</div>
@@ -33,36 +33,37 @@ export default function AltPage() {
             </div>
 
             <Window title="Profile" className="row-span-2 col-span-2 flex flex-col gap-6">
-              <div className="flex flex-col items-center space-y-6">
+              <div className="flex flex-col items-center space-y-6 h-full">
                 {/* Profile Image */}
-                <div className="relative w-48 h-48 overflow-hidden">
+                <div className="relative w-full h-64">
                   <Image
                     src="/nick-cutout.png"
-                    alt="Nick Michau"
+                    alt="Picture of Nick Michau"
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
+                    priority
                   />
                 </div>
 
                 {/* Contact Information */}
-                <div className="text-center space-y-3">
-                  <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                    Email:
+                <div className="text-center space-y-3 flex-1">
+                  <div className="text-lg font-medium text-green-400">
+                    E:
                     <Link
                       href="mailto:nick@michau.uk"
-                      className="ml-2 text-blue-600 dark:text-blue-400 hover:underline"
+                      className="ml-2 text-green-300 hover:text-green-200 hover:underline transition-colors glow"
                     >
                       nick@michau.uk
                     </Link>
                   </div>
 
-                  <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                    GitHub:
+                  <div className="text-lg font-medium text-green-400">
+                    G:
                     <Link
                       href="https://github.com/NOM1989"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-2 text-blue-600 dark:text-blue-400 hover:underline"
+                      className="ml-2 text-green-300 hover:text-green-200 hover:underline transition-colors glow"
                     >
                       github.com/NOM1989
                     </Link>
