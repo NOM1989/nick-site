@@ -154,14 +154,27 @@
   }
 
   .crt-flicker {
-    background: linear-gradient(transparent 50%, rgba(255, 255, 255, 0.03) 50%);
-    animation: flicker 0.15s infinite linear alternate;
+    background: linear-gradient(transparent 1%, rgba(255, 255, 255, 0.03) 1%);
+    animation: flicker 0.25s infinite linear alternate;
   }
 
   .crt-screen-transform {
     transform: perspective(1000px) rotateX(2deg) rotateY(1deg) scale3d(1.02, 1.01, 1);
     transform-style: preserve-3d;
     transform-origin: center center;
+  }
+
+  /* Responsive CRT effects - reduce transform intensity on smaller screens */
+  @media (max-width: 768px) {
+    .crt-screen-transform {
+      transform: perspective(800px) rotateX(1deg) rotateY(0.5deg) scale3d(1.01, 1.005, 1);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .crt-screen-transform {
+      transform: perspective(600px) rotateX(0.5deg) rotateY(0.25deg) scale3d(1.005, 1.002, 1);
+    }
   }
 
   .crt-content-transform {
@@ -178,6 +191,16 @@
 
   .glow {
     text-shadow: 0 0 5px #ffffff;
+  }
+
+  /* Responsive glow effects */
+  @media (max-width: 768px) {
+    .glow {
+      text-shadow: 0 0 3px #ffffff;
+    }
+    .glow-green {
+      text-shadow: 0 0 3px #00ff00;
+    }
   }
 }
 

@@ -45,7 +45,7 @@ export default function AltPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 relative bg-white">
+                <div className="flex-1 relative">
                   <Image
                     src="/nick-cutout.png"
                     alt="Picture of Nick Michau"

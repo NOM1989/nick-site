@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Home() {
+export default function AltPage() {
   return (
     <main className="min-h-screen bg-black overflow-hidden relative">
       {/* CRT Background Effects Applied to Entire Page */}
@@ -35,3 +35,4 @@ export default function Home() {
     </main>
   );
 }
+
