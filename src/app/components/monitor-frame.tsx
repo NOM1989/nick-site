@@ -24,7 +24,7 @@ export default function MonitorFrame({
   return (
     <div className={cn("relative w-full h-full", className)}>
       {/* Monitor Frame */}
-      <div className="relative rounded-lg shadow-2xl border-4 border-white h-full">
+      <div className="relative rounded-lg shadow-2xl border-4 border-white/90 h-full">
         {/* Screen Bezel */}
         <div className="relative bg-black p-1 rounded-lg shadow-inner h-full">
           {/* CRT Screen */}

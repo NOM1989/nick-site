@@ -19,14 +19,14 @@ export default function ClearMonitor({
   return (
     <div className={cn("relative w-full h-full", className)}>
       {/* Monitor Frame */}
-      <div className="relative rounded-lg shadow-2xl border-4 border-white h-full">
+      <div className="relative rounded-lg shadow-2xl border-4 border-white/90 h-full">
         {/* Screen Bezel */}
         <div className="relative bg-black p-1 rounded-lg shadow-inner h-full">
           {/* CRT Screen */}
           <div
             className={cn(
               "crt-screen relative overflow-hidden h-full rounded-lg",
-              "bg-black filter contrast-[1.2] brightness-110",
+              "bg-black filter contrast-[1.2] brightness-110 glow",
               screenClassName,
             )}
           >
