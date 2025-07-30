@@ -3,19 +3,19 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
-interface RetroMonitorProps {
+interface ClearMonitorProps {
   children?: ReactNode
   className?: string
   screenClassName?: string
   asciiArt?: string[]  // Array of lines with ANSI codes
 }
 
-export default function Monitor({ 
+export default function ClearMonitor({ 
   children, 
   className, 
   screenClassName,
   asciiArt
-}: RetroMonitorProps) {
+}: ClearMonitorProps) {
   return (
     <div className={cn("relative w-full h-full", className)}>
       {/* Monitor Frame */}
@@ -26,7 +26,7 @@ export default function Monitor({
           <div
             className={cn(
               "crt-screen relative overflow-hidden h-full rounded-lg",
-              "bg-black filter contrast-[1.2] brightness-110 glow-green",
+              "bg-black filter contrast-[1.2] brightness-110",
               screenClassName,
             )}
           >
