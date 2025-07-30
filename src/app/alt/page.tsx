@@ -32,45 +32,30 @@ export default function AltPage() {
               </div>
             </div>
 
-            <Window title="Profile" className="row-span-2 col-span-2 flex flex-col gap-6">
-              <div className="flex flex-col items-center space-y-6 h-full">
-                {/* Profile Image */}
-                <div className="relative w-full h-64">
+            <div className="row-span-1 col-span-2 bg-white/30 backdrop-blur-sm border-4 border-white/50 overflow-hidden">
+              <div className="flex flex-col h-full">
+                <div className="px-4 py-3 flex items-center gap-2 bg-black/40 border-b border-green-500/30">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-400/60 border border-red-300/30"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-400/60 border border-yellow-300/30"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400/60 border border-green-300/30"></div>
+                  </div>
+                  <div className="flex-1 text-center text-3xl font-medium text-green-300 font-inconsolata tracking-wide">
+                    nick@michau.uk
+                  </div>
+                </div>
+
+                <div className="flex-1 relative bg-white">
                   <Image
                     src="/nick-cutout.png"
                     alt="Picture of Nick Michau"
                     fill
-                    className="object-cover object-top"
+                    className="object-cover object-top brightness-90"
                     priority
                   />
                 </div>
-
-                {/* Contact Information */}
-                <div className="text-center space-y-3 flex-1">
-                  <div className="text-lg font-medium text-green-400">
-                    E:
-                    <Link
-                      href="mailto:nick@michau.uk"
-                      className="ml-2 text-green-300 hover:text-green-200 hover:underline transition-colors glow"
-                    >
-                      nick@michau.uk
-                    </Link>
-                  </div>
-
-                  <div className="text-lg font-medium text-green-400">
-                    G:
-                    <Link
-                      href="https://github.com/NOM1989"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-green-300 hover:text-green-200 hover:underline transition-colors glow"
-                    >
-                      github.com/NOM1989
-                    </Link>
-                  </div>
-                </div>
               </div>
-            </Window>
+            </div>
 
             <div className="row-span-2 col-span-3 bg-black/30 backdrop-blur-sm rounded-lg border border-green-500/30 p-6">
               <div className="space-y-2">
@@ -105,8 +90,6 @@ export default function AltPage() {
                 </div>
               </div>
             </div>
-
-            <RetroDisplay></RetroDisplay>
 
           </div>
         </div>
