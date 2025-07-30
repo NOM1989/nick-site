@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
-import AnsiText from "./ansi-text"
 
 interface RetroMonitorProps {
   children?: ReactNode
@@ -18,15 +17,15 @@ export default function Monitor({
   asciiArt
 }: RetroMonitorProps) {
   return (
-    <div className={cn("relative w-full max-w-4xl mx-auto", className)}>
+    <div className={cn("relative w-full h-full", className)}>
       {/* Monitor Frame */}
-      <div className="relative rounded-lg shadow-2xl border-4 border-white">
+      <div className="relative rounded-lg shadow-2xl border-4 border-white h-full">
         {/* Screen Bezel */}
-        <div className="relative bg-black p-4 rounded-lg shadow-inner">
+        <div className="relative bg-black p-4 rounded-lg shadow-inner h-full">
           {/* CRT Screen */}
           <div
             className={cn(
-              "crt-screen relative overflow-hidden aspect-[4/3] min-h-[300px] rounded-lg",
+              "crt-screen relative overflow-hidden h-full rounded-lg",
               "bg-black filter contrast-[1.2] brightness-110 glow-green",
               screenClassName,
             )}
@@ -38,19 +37,9 @@ export default function Monitor({
               "crt-screen-transform"
             )}>
               <div className="crt-content-transform">
-                {children || (asciiArt ? (
-                  <div className="whitespace-pre font-mono text-xs leading-tight">
-                    {asciiArt.map((line, index) => (
-                      <div key={index}>
-                        <AnsiText>{line}</AnsiText>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                {children || (
                   <div className="space-y-2">
                     <pre className="text-4xl font-bold mb-4">{"Nick Michau"}</pre>
-                    <pre>{"GREETINGS PROFESSOR FALKEN"}</pre>
-                    <pre>{"SHALL WE PLAY A GAME?"}</pre>
                     <div className="mt-4">
                       <pre className="inline">
                         {"> "}
@@ -58,7 +47,7 @@ export default function Monitor({
                       </pre>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
