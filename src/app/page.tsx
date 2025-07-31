@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ScrollTransformSlide } from "./components/ScrollTransformSlide";
 
 export default function Home() {
   return (
@@ -33,10 +34,12 @@ export default function Home() {
       </section>
 
       {/* Slide 2 - Coming Soon */}
-      <section className="sticky top-0 h-screen flex flex-col items-center justify-center text-center bg-black font-inconsolata">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl text-white glow">
-          Content coming...
-        </h1>
+      <section className="sticky top-0 h-screen flex flex-col items-center justify-center text-center font-inconsolata">
+        <ScrollTransformSlide className="w-full h-full flex flex-col items-center justify-center text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl text-white glow">
+            Content coming...
+          </h1>
+        </ScrollTransformSlide>
       </section>
     </main>
   );
