@@ -26,7 +26,7 @@ export default function Home() {
           </div>
           <Link
             href="mailto:nick@michau.uk"
-            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl glow hover:brightness-110 break-all sm:break-normal"
+            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl glow hover:text-blue-300 hover:brightness-110 break-all sm:break-normal transition-colors duration-200"
           >
             nick@michau.uk
           </Link>
