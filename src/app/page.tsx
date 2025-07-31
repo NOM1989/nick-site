@@ -2,19 +2,18 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black overflow-hidden relative">
-      {/* CRT Background Effects Applied to Entire Page */}
-      <div className="absolute inset-0 bg-black filter contrast-[1.2] brightness-110 glow-green">
-        <div className="absolute inset-0 pointer-events-none z-2 crt-scanlines" />
-
-        <div className="absolute inset-0 pointer-events-none z-3 crt-curvature" />
-
-        <div className="absolute inset-0 pointer-events-none z-4 opacity-5 crt-flicker" />
-      </div>
-
-      {/* Content Layer */}
-      <div className="crt-screen-transform relative z-10 h-full">
-        <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-2 md:space-y-4 font-inconsolata text-white">
+    <main className="relative bg-black">
+      {/* Slide 1 - Hero Section with CRT Effects */}
+      <section className="sticky top-0 h-screen bg-black overflow-hidden">
+        {/* CRT Background Effects Applied to First Slide Only */}
+        <div className="absolute inset-0 bg-black filter contrast-[1.2] brightness-110 glow-green pointer-events-none">
+          <div className="absolute inset-0 z-[1] crt-scanlines" />
+          <div className="absolute inset-0 z-[2] crt-curvature" />
+          <div className="absolute inset-0 z-[3] crt-flicker" />
+        </div>
+        
+        {/* First Slide Content */}
+        <div className="crt-screen-transform relative z-[10] h-full flex flex-col items-center justify-center text-center space-y-2 md:space-y-4 font-inconsolata text-white">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl glow">
             Nick Michau
           </h1>
@@ -26,12 +25,19 @@ export default function Home() {
           </div>
           <Link
             href="mailto:nick@michau.uk"
-            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl glow hover:text-blue-300 hover:brightness-110 break-all sm:break-normal transition-colors duration-200"
+            className="relative z-[20] text-xl sm:text-2xl md:text-3xl lg:text-4xl glow hover:text-blue-300 hover:brightness-110 break-all sm:break-normal transition-colors duration-200 cursor-pointer"
           >
             nick@michau.uk
           </Link>
         </div>
-      </div>
+      </section>
+
+      {/* Slide 2 - Coming Soon */}
+      <section className="sticky top-0 h-screen flex flex-col items-center justify-center text-center bg-black font-inconsolata">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl text-white glow">
+          Content coming...
+        </h1>
+      </section>
     </main>
   );
 }
