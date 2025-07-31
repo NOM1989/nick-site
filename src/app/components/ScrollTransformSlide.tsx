@@ -9,12 +9,14 @@ interface ScrollTransformSlideProps {
 
 export function ScrollTransformSlide({ children, className = "" }: ScrollTransformSlideProps) {
   const [scale, setScale] = useState(1);
+  const [borderRadius, setBorderRadius] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       // Only apply transform effect on screens larger than md (768px)
       if (window.innerWidth < 768) {
         setScale(1);
+        setBorderRadius(0);
         return;
       }
 
@@ -32,6 +34,13 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
       // Scale from 90% to 100% based on scroll progress
       const newScale = 0.9 + (0.1 * progress);
       setScale(newScale);
+
+      // Border radius: Start with 48px when slide begins to appear, linearly decrease to 0
+      // when the second slide reaches the top of the screen
+      const maxRadius = 48; // 48px = rounded-3xl in Tailwind
+      // Use the same progress as scale, but invert it for radius (start high, go to 0)
+      const newRadius = maxRadius * (1 - progress);
+      setBorderRadius(newRadius);
     };
 
     const handleResize = () => {
@@ -39,7 +48,7 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
       handleScroll();
     };
 
-    // Set initial scale
+    // Set initial scale and radius
     handleScroll();
     
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -53,10 +62,11 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
 
   return (
     <div 
-      className={`transition-transform duration-75 ease-out bg-black ${className}`}
+      className={`transition-all duration-75 ease-out bg-black overflow-hidden ${className}`}
       style={{ 
         transform: `scale(${scale})`,
-        transformOrigin: "center center"
+        transformOrigin: "center center",
+        borderRadius: `${borderRadius}px`
       }}
     >
       {children}
