@@ -1,11 +1,21 @@
+"use client";
+
 import Link from "next/link";
-import { ScrollTransformSlide } from "./components/ScrollTransformSlide";
+import { ScrollTransformSlide, useScrollFade } from "./components/ScrollTransformSlide";
 
 export default function Home() {
+  const fadeOpacity = useScrollFade();
+
   return (
     <main className="relative bg-black">
       {/* Slide 1 - Hero Section with CRT Effects */}
       <section className="sticky top-0 h-screen bg-black overflow-hidden">
+        {/* Fade overlay that appears on scroll */}
+        <div 
+          className="absolute inset-0 bg-black z-[15] transition-opacity duration-75 ease-out pointer-events-none"
+          style={{ opacity: fadeOpacity }}
+        />
+        
         {/* CRT Background Effects Applied to First Slide Only */}
         <div className="absolute inset-0 bg-black filter contrast-[1.2] brightness-110 glow-green pointer-events-none">
           <div className="absolute inset-0 z-[1] crt-scanlines" />

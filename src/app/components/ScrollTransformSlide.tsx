@@ -63,3 +63,47 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
     </div>
   );
 }
+
+// Hook to track scroll-based fade effect for the first slide
+export function useScrollFade() {
+  const [fadeOpacity, setFadeOpacity] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      
+      // Start fading when user scrolls past 20% of the first slide
+      // Complete fade when reaching 80% of the first slide
+      const fadeStartPoint = viewportHeight * 0.2;
+      const fadeEndPoint = viewportHeight * 0.9;
+      
+      let opacity = 0;
+      
+      if (scrollY >= fadeStartPoint) {
+        // Calculate fade progress between start and end points
+        const fadeProgress = Math.min((scrollY - fadeStartPoint) / (fadeEndPoint - fadeStartPoint), 1);
+        opacity = fadeProgress;
+      }
+      
+      setFadeOpacity(opacity);
+    };
+
+    const handleResize = () => {
+      handleScroll();
+    };
+
+    // Set initial opacity
+    handleScroll();
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  return fadeOpacity;
+}
