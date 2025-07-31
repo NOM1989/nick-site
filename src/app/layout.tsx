@@ -22,7 +22,7 @@ const inconsolata = Inconsolata({
 
 export const metadata: Metadata = {
   title: "Nick Michau",
-  description: "Thanks for swinging by",
+  description: "Nick Michau's personal website",
   icons: {
     icon: [
       {
