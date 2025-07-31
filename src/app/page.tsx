@@ -14,7 +14,7 @@ export default function Home() {
 
       {/* Content Layer */}
       <div className="crt-screen-transform relative z-10 h-full">
-        <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-2 md:space-y-4 font-inconsolata">
+        <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-2 md:space-y-4 font-inconsolata text-white">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl glow">
             Nick Michau
           </h1>
