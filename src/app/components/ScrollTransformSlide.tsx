@@ -10,6 +10,7 @@ interface ScrollTransformSlideProps {
 export function ScrollTransformSlide({ children, className = "" }: ScrollTransformSlideProps) {
   const [scale, setScale] = useState(1);
   const [borderRadius, setBorderRadius] = useState(0);
+  const [borderOpacity, setBorderOpacity] = useState(1);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +18,7 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
       if (window.innerWidth < 768) {
         setScale(1);
         setBorderRadius(0);
+        setBorderOpacity(0);
         return;
       }
 
@@ -41,6 +43,11 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
       // Use the same progress as scale, but invert it for radius (start high, go to 0)
       const newRadius = maxRadius * (1 - progress);
       setBorderRadius(newRadius);
+
+      // Border opacity: Start with 1 when slide begins to appear, linearly decrease to 0
+      // when the second slide reaches the top of the screen
+      const newBorderOpacity = 1 - progress;
+      setBorderOpacity(newBorderOpacity);
     };
 
     const handleResize = () => {
@@ -66,7 +73,9 @@ export function ScrollTransformSlide({ children, className = "" }: ScrollTransfo
       style={{ 
         transform: `scale(${scale})`,
         transformOrigin: "center center",
-        borderRadius: `${borderRadius}px`
+        borderRadius: `${borderRadius}px`,
+        border: `2px solid rgba(255, 255, 255, ${borderOpacity * 0.2})`,
+        boxShadow: `0 0 5px rgba(255, 255, 255, ${borderOpacity * 0.1})`
       }}
     >
       {children}
