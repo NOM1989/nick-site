@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface Tile {
   x: number;
@@ -12,6 +12,7 @@ interface Tile {
 export default function IsometricPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tilesRef = useRef<Tile[]>([]);
+  const tileMapRef = useRef<Map<string, Tile>>(new Map());
   const mouseRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number | null>(null);
 
@@ -35,19 +36,23 @@ export default function IsometricPage() {
     resize();
     window.addEventListener('resize', resize);
 
-    // Initialize tiles
+    // Initialize tiles and tile map for O(1) neighbor lookups
     const tiles: Tile[] = [];
+    const tileMap = new Map<string, Tile>();
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let x = 0; x < GRID_SIZE; x++) {
-        tiles.push({
+        const tile = {
           x,
           y,
           depth: 0,
           targetDepth: 0,
-        });
+        };
+        tiles.push(tile);
+        tileMap.set(`${x},${y}`, tile);
       }
     }
     tilesRef.current = tiles;
+    tileMapRef.current = tileMap;
 
     // Mouse move handler
     const handleMouseMove = (e: MouseEvent) => {
@@ -113,38 +118,31 @@ export default function IsometricPage() {
       // Draw side faces if depth > 0 (pillar effect)
       // When a tile sinks, we need to show the walls connecting it to shallower neighbors
       if (depth > 2) {
-        // Calculate adjacent tile depths for smooth transitions
-        const topTile = tilesRef.current.find(t => t.x === x && t.y === y - 1);
-        const rightTile = tilesRef.current.find(t => t.x === x + 1 && t.y === y);
-        const bottomTile = tilesRef.current.find(t => t.x === x + 1 && t.y === y + 1);
-        const leftTile = tilesRef.current.find(t => t.x === x && t.y === y + 1);
-        const topRightTile = tilesRef.current.find(t => t.x === x + 1 && t.y === y - 1);
-        const topLeftTile = tilesRef.current.find(t => t.x === x - 1 && t.y === y);
-        const bottomLeftTile = tilesRef.current.find(t => t.x === x - 1 && t.y === y + 1);
+        // Get adjacent tile depths using O(1) map lookups
+        const tileMap = tileMapRef.current;
+        const topDepth = tileMap.get(`${x},${y - 1}`)?.depth ?? 0;
+        const rightDepth = tileMap.get(`${x + 1},${y}`)?.depth ?? 0;
+        const leftDepth = tileMap.get(`${x},${y + 1}`)?.depth ?? 0;
+        const topLeftDepth = tileMap.get(`${x - 1},${y}`)?.depth ?? 0;
         
-        const topDepth = topTile ? topTile.depth : 0;
-        const rightDepth = rightTile ? rightTile.depth : 0;
-        const bottomDepth = bottomTile ? bottomTile.depth : 0;
-        const leftDepth = leftTile ? leftTile.depth : 0;
-        const topRightDepth = topRightTile ? topRightTile.depth : 0;
-        const topLeftDepth = topLeftTile ? topLeftTile.depth : 0;
-        const bottomLeftDepth = bottomLeftTile ? bottomLeftTile.depth : 0;
+        // Reuse corner calculations to avoid redundant toScreen calls
+        const topLeftDeep = top;
+        const topRightDeep = right;
+        const bottomLeftDeep = left;
+        const bottomRightDeep = bottom;
         
         // Right face - draw if the right neighbor is shallower (this tile has sunk more)
         if (depth > rightDepth + 1) {
-          const topRight = toScreen(x + 1, y, depth);
           const topRightShallow = toScreen(x + 1, y, rightDepth);
-          const bottomRight = toScreen(x + 1, y + 1, depth);
           const bottomRightShallow = toScreen(x + 1, y + 1, rightDepth);
           
           ctx.beginPath();
-          ctx.moveTo(topRight.x, topRight.y);
+          ctx.moveTo(topRightDeep.x, topRightDeep.y);
           ctx.lineTo(topRightShallow.x, topRightShallow.y);
           ctx.lineTo(bottomRightShallow.x, bottomRightShallow.y);
-          ctx.lineTo(bottomRight.x, bottomRight.y);
+          ctx.lineTo(bottomRightDeep.x, bottomRightDeep.y);
           ctx.closePath();
           
-          // Darker face since it's inside the hole
           ctx.fillStyle = `rgba(0, ${Math.floor(40 * brightness)}, ${Math.floor(80 * brightness)}, 0.85)`;
           ctx.fill();
           ctx.strokeStyle = `rgba(0, 150, 200, ${0.5 * brightness})`;
@@ -154,19 +152,16 @@ export default function IsometricPage() {
         
         // Left face - draw if the left neighbor is shallower
         if (depth > leftDepth + 1) {
-          const bottomLeft = toScreen(x, y + 1, depth);
           const bottomLeftShallow = toScreen(x, y + 1, leftDepth);
-          const bottomRight = toScreen(x + 1, y + 1, depth);
           const bottomRightShallow = toScreen(x + 1, y + 1, leftDepth);
           
           ctx.beginPath();
-          ctx.moveTo(bottomLeft.x, bottomLeft.y);
+          ctx.moveTo(bottomLeftDeep.x, bottomLeftDeep.y);
           ctx.lineTo(bottomLeftShallow.x, bottomLeftShallow.y);
           ctx.lineTo(bottomRightShallow.x, bottomRightShallow.y);
-          ctx.lineTo(bottomRight.x, bottomRight.y);
+          ctx.lineTo(bottomRightDeep.x, bottomRightDeep.y);
           ctx.closePath();
           
-          // Even darker face since it's more in shadow
           ctx.fillStyle = `rgba(0, ${Math.floor(25 * brightness)}, ${Math.floor(50 * brightness)}, 0.85)`;
           ctx.fill();
           ctx.strokeStyle = `rgba(0, 120, 180, ${0.4 * brightness})`;
@@ -176,19 +171,16 @@ export default function IsometricPage() {
         
         // Top face - draw if the top neighbor is shallower
         if (depth > topDepth + 1) {
-          const topLeft = toScreen(x, y, depth);
           const topLeftShallow = toScreen(x, y, topDepth);
-          const topRight = toScreen(x + 1, y, depth);
           const topRightShallow = toScreen(x + 1, y, topDepth);
           
           ctx.beginPath();
-          ctx.moveTo(topLeft.x, topLeft.y);
+          ctx.moveTo(topLeftDeep.x, topLeftDeep.y);
           ctx.lineTo(topLeftShallow.x, topLeftShallow.y);
           ctx.lineTo(topRightShallow.x, topRightShallow.y);
-          ctx.lineTo(topRight.x, topRight.y);
+          ctx.lineTo(topRightDeep.x, topRightDeep.y);
           ctx.closePath();
           
-          // Medium brightness
           ctx.fillStyle = `rgba(0, ${Math.floor(60 * brightness)}, ${Math.floor(100 * brightness)}, 0.85)`;
           ctx.fill();
           ctx.strokeStyle = `rgba(0, 170, 220, ${0.6 * brightness})`;
@@ -198,19 +190,16 @@ export default function IsometricPage() {
         
         // Front-right face (x-1 direction) - draw if the left-front neighbor is shallower
         if (depth > topLeftDepth + 1) {
-          const topLeft = toScreen(x, y, depth);
           const topLeftShallow = toScreen(x, y, topLeftDepth);
-          const bottomLeft = toScreen(x, y + 1, depth);
           const bottomLeftShallow = toScreen(x, y + 1, topLeftDepth);
           
           ctx.beginPath();
-          ctx.moveTo(topLeft.x, topLeft.y);
+          ctx.moveTo(topLeftDeep.x, topLeftDeep.y);
           ctx.lineTo(topLeftShallow.x, topLeftShallow.y);
           ctx.lineTo(bottomLeftShallow.x, bottomLeftShallow.y);
-          ctx.lineTo(bottomLeft.x, bottomLeft.y);
+          ctx.lineTo(bottomLeftDeep.x, bottomLeftDeep.y);
           ctx.closePath();
           
-          // Lighter face since it's more visible from user perspective
           ctx.fillStyle = `rgba(0, ${Math.floor(70 * brightness)}, ${Math.floor(110 * brightness)}, 0.85)`;
           ctx.fill();
           ctx.strokeStyle = `rgba(0, 180, 230, ${0.65 * brightness})`;
@@ -244,13 +233,9 @@ export default function IsometricPage() {
         tile.depth += (tile.targetDepth - tile.depth) * 0.15;
       });
       
-      // Sort tiles for proper rendering (back to front)
-      const sortedTiles = [...tilesRef.current].sort((a, b) => {
-        return (a.x + a.y) - (b.x + b.y);
-      });
-      
-      // Draw all tiles
-      sortedTiles.forEach(drawTile);
+      // Draw tiles in proper order (back to front) without creating a copy
+      // Since tiles are already sorted by (y, x) from initialization, we can draw directly
+      tilesRef.current.forEach(drawTile);
       
       // Add glow effect around mouse
       const gradient = ctx.createRadialGradient(
