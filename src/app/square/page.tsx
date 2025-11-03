@@ -3,15 +3,15 @@
 import { useEffect, useRef } from "react";
 
 const CONFIG = {
-  GRID_SIZE: 40,
-  RADIUS: 150,
-  MIN_SCALE: 0.5,
-  SHRINK_SPEED: 0.15,
+  GRID_SIZE: 20,
+  RADIUS: 50,
+  MAX_DESCEND: 80, // Maximum pillar descent in pixels
+  DESCEND_SPEED: 0.15,
   RECOVER_SPEED: 0.05,
   GRADIENT_RADIUS: 200,
 } as const;
 
-type SquareState = { scale: number; targetScale: number };
+type SquareState = { descend: number; targetDescend: number };
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ export default function Home() {
     if (!container) return;
 
     const totalSquares = CONFIG.GRID_SIZE ** 2;
-    statesRef.current = Array.from({ length: totalSquares }, () => ({ scale: 1, targetScale: 1 }));
+    statesRef.current = Array.from({ length: totalSquares }, () => ({ descend: 0, targetDescend: 0 }));
 
     const positions = squareRefs.current.map((sq) => {
       if (!sq) return null;
@@ -45,43 +45,54 @@ export default function Home() {
         const state = statesRef.current[i];
         const pos = positions[i];
 
-        // Calculate target scale based on distance to mouse
+        // Calculate target descend based on distance to mouse
         if (mouse && pos) {
           const dist = Math.hypot(pos.x - mouse.x, pos.y - mouse.y);
-          state.targetScale = dist < CONFIG.RADIUS ? lerp(CONFIG.MIN_SCALE, 1, dist / CONFIG.RADIUS) : 1;
+          state.targetDescend = dist < CONFIG.RADIUS ? lerp(CONFIG.MAX_DESCEND, 0, dist / CONFIG.RADIUS) : 0;
         } else {
-          state.targetScale = 1;
+          state.targetDescend = 0;
         }
 
-        // Smooth scale transition
-        const speed = state.scale > state.targetScale ? CONFIG.SHRINK_SPEED : CONFIG.RECOVER_SPEED;
-        state.scale = lerp(state.scale, state.targetScale, speed);
+        // Smooth descend transition
+        const speed = state.descend < state.targetDescend ? CONFIG.DESCEND_SPEED : CONFIG.RECOVER_SPEED;
+        state.descend = lerp(state.descend, state.targetDescend, speed);
 
-        if (Math.abs(state.scale - state.targetScale) > 0.001) needsUpdate = true;
+        if (Math.abs(state.descend - state.targetDescend) > 0.001) needsUpdate = true;
 
-        // Apply 3D scale with rotation and depth
-        const shrinkRatio = 1 - state.scale;
-        const rotateX = shrinkRatio * 15; // Tilt based on shrink
-        const translateZ = shrinkRatio * -30; // Push back in Z-space
-        const shadowDepth = shrinkRatio * 20;
-        const shadowBlur = shrinkRatio * 40;
+        // Calculate pillar effect values
+        const descendRatio = state.descend / CONFIG.MAX_DESCEND;
+        const translateY = state.descend; // Pillar descends
+        const shadowOffset = state.descend * 0.5; // Shadow grows as pillar descends
+        const shadowBlur = state.descend * 0.8;
         
-        square.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${state.scale}) translateZ(${translateZ}px)`;
+        // Apply isometric 3D transform with pillar descent
+        square.style.transform = `translateY(${translateY}px)`;
         square.style.transition = 'background-color 0.2s ease';
-        square.style.boxShadow = shrinkRatio > 0.01 
-          ? `0 ${shadowDepth}px ${shadowBlur}px rgba(0, 0, 0, ${shrinkRatio * 0.8}), inset 0 0 ${shrinkRatio * 20}px rgba(249, 115, 22, ${shrinkRatio * 0.5})`
-          : 'none';
-        square.style.backgroundColor = shrinkRatio > 0.01 ? `rgb(${249 * shrinkRatio}, ${115 * shrinkRatio}, ${22 * shrinkRatio})` : '#000';
+        
+        // Orange glow when descended
+        if (descendRatio > 0.01) {
+          const glowIntensity = descendRatio * 0.8;
+          square.style.boxShadow = `
+            0 ${shadowOffset}px ${shadowBlur}px rgba(0, 0, 0, ${descendRatio * 0.6}),
+            inset 0 0 ${descendRatio * 30}px rgba(249, 115, 22, ${glowIntensity}),
+            0 0 ${descendRatio * 40}px rgba(249, 115, 22, ${glowIntensity * 0.6})
+          `;
+          square.style.backgroundColor = `rgb(${249 * descendRatio}, ${115 * descendRatio}, ${22 * descendRatio})`;
+        } else {
+          square.style.boxShadow = 'none';
+          square.style.backgroundColor = '#000';
+        }
 
-        // Apply radial gradient overlay
+        // Apply radial gradient overlay for extra glow
         if (mouse && pos) {
           const gradDist = Math.hypot(pos.x - mouse.x, pos.y - mouse.y);
           const gradIntensity = Math.max(0, 1 - gradDist / CONFIG.GRADIENT_RADIUS);
           if (gradIntensity > 0.01) {
-            const overlayColor = `rgba(249, 115, 22, ${gradIntensity * 0.3})`;
-            square.style.backgroundColor = shrinkRatio > 0.01 
-              ? `rgb(${Math.min(255, 249 * shrinkRatio + 249 * gradIntensity * 0.3)}, ${Math.min(255, 115 * shrinkRatio + 115 * gradIntensity * 0.3)}, ${Math.min(255, 22 * shrinkRatio + 22 * gradIntensity * 0.3)})`
-              : overlayColor;
+            const baseOrange = descendRatio > 0.01;
+            const r = Math.min(255, (baseOrange ? 249 * descendRatio : 0) + 249 * gradIntensity * 0.3);
+            const g = Math.min(255, (baseOrange ? 115 * descendRatio : 0) + 115 * gradIntensity * 0.3);
+            const b = Math.min(255, (baseOrange ? 22 * descendRatio : 0) + 22 * gradIntensity * 0.3);
+            square.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
           }
         }
       });
@@ -110,13 +121,18 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-slate-950">
+    <main className="relative min-h-screen w-full overflow-hidden bg-slate-950 flex items-center justify-center">
       <div
         ref={containerRef}
-        className="grid h-screen w-full"
+        className="grid"
         style={{
           gridTemplateColumns: `repeat(${CONFIG.GRID_SIZE}, 1fr)`,
           gridTemplateRows: `repeat(${CONFIG.GRID_SIZE}, 1fr)`,
+          transform: 'rotateX(60deg) rotateZ(45deg)',
+          transformStyle: 'preserve-3d',
+          perspective: '1200px',
+          width: '80vmin',
+          height: '80vmin',
         }}
       >
         {Array.from({ length: CONFIG.GRID_SIZE ** 2 }, (_, i) => (
@@ -126,14 +142,15 @@ export default function Home() {
             className="aspect-square"
             style={{
               backgroundColor: '#000',
-              border: '0.5px solid rgb(255, 255, 255)',
+              border: '0.5px solid rgba(100, 100, 100, 0.5)',
               transformStyle: 'preserve-3d',
+              willChange: 'transform, background-color, box-shadow',
             }}
           />
         ))}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ transform: 'translateY(-20vh)' }}>
         <h1 className="text-4xl font-bold text-white">Move your mouse!</h1>
       </div>
     </main>
