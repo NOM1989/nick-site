@@ -8,7 +8,6 @@ const ISO_SIN_30 = 0.5;
 const LERP_SPEED = 0.15;
 const MIN_VISIBLE_DEPTH = 0.1;
 const MANHATTAN_TO_EUCLIDEAN = 1.4;
-const MAX_TILES = 800;
 
 // TypedArray indices for tile data - better memory layout and cache performance
 const enum TileIndex {
@@ -152,14 +151,14 @@ export default function IsometricPage() {
       const diffEnd = Math.ceil(maxDiff);
       
       // Pre-allocate TypedArray
-      const estimatedTiles = Math.min((sumEnd - sumStart) * (diffEnd - diffStart) / 2, MAX_TILES);
+      const estimatedTiles = (sumEnd - sumStart) * (diffEnd - diffStart) / 2;
       tilesDataRef.current = new Float32Array(estimatedTiles * TileIndex.SIZE);
       
       const tileMap = new Map<string, number>();
       let tileCount = 0;
       
       // Generate tiles with parity handling
-      outerLoop: for (let sum = sumStart; sum <= sumEnd; sum++) {
+      for (let sum = sumStart; sum <= sumEnd; sum++) {
         for (let diff = diffStart; diff <= diffEnd; diff++) {
           if ((sum + diff) % 2 === 0) {
             const x = (sum + diff) / 2;
@@ -173,8 +172,6 @@ export default function IsometricPage() {
             
             tileMap.set(`${x},${y}`, tileCount);
             tileCount++;
-            
-            if (tileCount >= MAX_TILES) break outerLoop;
           }
         }
       }
@@ -451,9 +448,9 @@ export default function IsometricPage() {
       />
       <div className="absolute top-4 left-4 md:top-8 md:left-8 z-10 text-cyan-400 font-mono">
         <h1 className="text-lg md:text-2xl font-bold mb-1 md:mb-2" style={{ textShadow: '0 0 10px rgba(0, 200, 255, 0.8)' }}>
-          Isometric Grid
+          Nick Michau
         </h1>
-        <p className="text-xs md:text-sm opacity-70">Move to interact</p>
+        <p className="text-xs md:text-sm opacity-70">nick@michau.uk</p>
       </div>
     </main>
   );
